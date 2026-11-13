@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>FÉNIX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        fenix: {
+                            p: '#e62e00',
+                            s: '#ff6b00',
+                            a: '#ffcc00',
+                            bar: '#f8f9fa',
+                            borde: '#ddd',
+                            texto: '#333'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Roboto, Arial, sans-serif;
+            height: 100vh;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Barra superior */
+        .barra-sup {
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            padding: .7rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            position: relative;
+        }
+        .barra-sup button {
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            touch-action: manipulation;
+        }
+        .barra-sup button:hover { background: #eee; color: #e62e00; }
+        .espacio { flex: 1; }
+
+        /* Contenido principal */
+        .contenido {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+        }
+
+        /* Logo FÉNIX */
+        .marca {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: 1.8rem;
+        }
+        .ico-fuego {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #e62e00, #ff6b00, #ffcc00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: llama 1.3s infinite alternate;
+        }
+        .txt-fenix {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #e62e00, #ff6b00, #ffcc00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        @keyframes llama {
+            0% { transform: scale(1) rotate(-3deg); }
+            100% { transform: scale(1.1) rotate(3deg); }
+        }
+
+        /* Buscador */
+        .buscador {
+            width: 100%;
+            max-width: 560px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 2.5rem;
+            padding: .8rem 1.2rem;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            margin-bottom: 1.8rem;
+        }
+        .buscador:focus-within {
+            box-shadow: 0 3px 12px rgba(230,46,0,.2);
+            border-color: #ff6b00;
+        }
+        .buscador i { color: #ff6b00; margin-right: .6rem; }
+        .buscador input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            color: #333;
+            background: transparent;
+        }
+
+        /* Cuadrícula de marcadores — 2 columnas */
+        .marcadores {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        .marcador {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .4rem;
+            padding: 1.2rem .8rem;
+            border-radius: .7rem;
+            border: 1px solid #e5e5e5;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            text-decoration: none;
+        }
+        .marcador:hover {
+            transform: translateY(-3px);
+            border-color: #ff6b00;
+            box-shadow: 0 4px 12px rgba(230,46,0,.1);
+        }
+        .marcador i { font-size: 1.5rem; color: #555; }
+        .marcador span { font-size: .9rem; color: #444; text-align: center; }
+
+        /* Botón agregar */
+        .btn-agregar {
+            border-style: dashed;
+            border-color: #bbb;
+            background: #fafafa;
+        }
+        .btn-agregar i { color: #888; font-size: 1.8rem; }
+        .btn-agregar span { color: #777; }
+
+        /* Botón eliminar marcador */
+        .btn-quitar {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #eee;
+            color: #666;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .marcador:hover .btn-quitar { display: flex; }
+
+        /* MENÚ DE LOS TRES PUNTOS — CORREGIDO */
+        .menu-puntos { position: relative; z-index: 9999; }
+        .menu-desp {
+            position: absolute;
+            top: 2.5rem;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: .6rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,.25);
+            min-width: 200px;
+            display: none;
+            z-index: 99999;
+            overflow: hidden;
+        }
+        .menu-desp.mostrar { display: block; }
+        .menu-desp button {
+            width: 100%;
+            text-align: left;
+            padding: .9rem 1rem;
+            border: none;
+            background: transparent;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            cursor: pointer;
+            font-size: .95rem;
+            touch-action: manipulation;
+        }
+        .menu-desp button:hover { background: #f5f5f5; color: #e62e00; }
+        .menu-desp button i { width: 18px; text-align: center; }
+
+        /* Modal agregar */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+        .modal.mostrar { display: flex; }
+        .modal-caja {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: .8rem;
+            width: 85%;
+            max-width: 340px;
+        }
+        .modal-caja h4 { margin-bottom: 1rem; color: #333; font-size: 1.1rem; }
+        .modal-caja input {
+            width: 100%;
+            padding: .85rem;
+            margin-bottom: .85rem;
+            border: 1px solid #ddd;
+            border-radius: .4rem;
+            font-size: 1rem;
+        }
+        .modal-caja input:focus { outline: none; border-color: #ff6b00; }
+        .modal-botones {
+            display: flex;
+            justify-content: flex-end;
+            gap: .8rem;
+            margin-top: .5rem;
+        }
+        .modal-botones button {
+            padding: .65rem 1.3rem;
+            border: none;
+            border-radius: .4rem;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn-cerrar { background: #eee; color: #333; }
+        .btn-guardar { background: #e62e00; color: #fff; }
+
+        /* Aviso */
+        .aviso {
+            color: #e62e00;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: .9rem;
+            display: none;
+        }
+
+        /* Zona navegación */
+        .zona-navegacion {
+            flex: 1;
+            width: 100%;
+            display: none;
+            border-top: 1px solid #ddd;
+        }
+        .zona-navegacion iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra superior -->
+    <div class="barra-sup">
+        <button id="atras" title="Atrás"><i class="fa fa-arrow-left"></i></button>
+        <button id="adelante" title="Adelante"><i class="fa fa-arrow-right"></i></button>
+        <button id="recargar" title="Recargar"><i class="fa fa-refresh"></i></button>
+        <button id="inicio" title="Inicio"><i class="fa fa-home"></i></button>
+        <div class="espacio"></div>
+        <button id="btn-estrella" title="Agregar página"><i class="fa fa-star-o"></i></button>
+        
+        <!-- Menú de tres puntos — onclick directo -->
+        <div class="menu-puntos">
+            <button id="btn-menu" onclick="toggleMenu()" title="Menú">
+                <i class="fa fa-ellipsis-v"></i>
+            </button>
+            <div class="menu-desp" id="menu-desp">
+                <button><i class="fa fa-plus-square-o"></i> Nueva pestaña</button>
+                <button><i class="fa fa-history"></i> Historial</button>
+                <button><i class="fa fa-bookmark"></i> Marcadores</button>
+                <button><i class="fa fa-moon-o"></i> Modo oscuro</button>
+                <button><i class="fa fa-info-circle"></i> Acerca de FÉNIX</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de inicio -->
+    <div id="pantalla-inicio" class="contenido">
+        <div class="marca">
+            <i class="fa fa-fire ico-fuego"></i>
+            <span class="txt-fenix">FÉNIX</span>
+        </div>
+
+        <div class="buscador">
+            <i class="fa fa-search"></i>
+            <input id="entrada-buscar" type="text" placeholder="Buscar o escribir dirección web...">
+        </div>
+
+        <!-- Cuadrícula de accesos directos -->
+        <div class="marcadores" id="contenedor-marcadores"></div>
+
+        <div id="aviso-texto" class="aviso"></div>
+    </div>
+
+    <!-- Zona de navegación -->
+    <div class="zona-navegacion" id="zona-navegacion">
+        <iframe id="vista-web" src=""></iframe>
+    </div>
+
+    <!-- Modal: Agregar página -->
+    <div class="modal" id="modal-agregar">
+        <div class="modal-caja">
+            <h4>Agregar página a FÉNIX</h4>
+            <input id="nombre-sitio" type="text" placeholder="Nombre del sitio">
+            <input id="url-sitio" type="text" placeholder="Ej: https://www.facebook.com">
+            <div class="modal-botones">
+                <button class="btn-cerrar" id="btn-cerrar-modal" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn-guardar" id="btn-guardar-marcador" onclick="guardarNuevoMarcador()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elementos del DOM
+        const $ = id => document.getElementById(id);
+        const contenedorMarc = $('contenedor-marcadores');
+        const entradaBuscar = $('entrada-buscar');
+        const modalAgregar = $('modal-agregar');
+        const nombreSitio = $('nombre-sitio');
+        const urlSitio = $('url-sitio');
+        const btnEstrella = $('btn-estrella');
+        const menuDesp = $('menu-desp');
+        const vistaWeb = $('vista-web');
+        const pantallaInicio = $('pantalla-inicio');
+        const zonaNavegacion = $('zona-navegacion');
+
+        // SITIOS QUE SE ABREN EN PESTAÑA NUEVA
+        const sitiosExternos = [
+            'facebook.com', 'instagram.com', 'tiktok.com', 'x.com',
+            'twitter.com', 'youtube.com', 'linkedin.com'
+        ];
+
+        // MARCADORES POR DEFECTO — SIEMPRE VISIBLES
+        const marcadoresPorDefecto = [
+            { nombre: 'Wikipedia', url: 'https://es.wikipedia.org' },
+            { nombre: 'YouTube', url: 'https://www.youtube.com' },
+            { nombre: 'TikTok', url: 'https://www.tiktok.com' },
+            { nombre: 'Facebook', url: 'https://www.facebook.com' },
+            { nombre: 'Instagram', url: 'https://www.instagram.com' }
+        ];
+
+        let marcadores = [];
+
+        // ✅ LECTURA SEGURA de localStorage con try/catch
+        function cargarMarcadores() {
+            try {
+                const guardados = localStorage.getItem('fenixMarcadores');
+                if (guardados) {
+                    marcadores = JSON.parse(guardados);
+                } else {
+                    marcadores = [...marcadoresPorDefecto];
+                }
+            } catch (e) {
+                // Si localStorage falla, usar los por defecto
+                marcadores = [...marcadoresPorDefecto];
+                console.log('localStorage no disponible, usando marcadores por defecto');
+            }
+            dibujarMarcadores();
+        }
+
+        // ✅ ESCRITURA SEGURA de localStorage con try/catch
+        function guardarEnStorage() {
+            try {
+                localStorage.setItem('fenixMarcadores', JSON.stringify(marcadores));
+            } catch (e) {
+                console.log('No se pudo guardar en localStorage');
+            }
+        }
+
+        // Determinar ícono según el nombre
+        function getIcono(nombre) {
+            const n = nombre.toLowerCase();
+            if (n.includes('wiki')) return 'fa-book';
+            if (n.includes('youtube')) return 'fa-youtube-play';
+            if (n.includes('tiktok')) return 'fa-music';
+            if (n.includes('facebook')) return 'fa-facebook-square';
+            if (n.includes('insta')) return 'fa-camera';
+            if (n.includes('twitter') || n.includes('x /')) return 'fa-twitter';
+            if (n.includes('mapas') || n.includes('google maps')) return 'fa-map-marker';
+            if (n.includes('rae')) return 'fa-book';
+            if (n.includes('bbc')) return 'fa-newspaper-o';
+            if (n.includes('linkedin')) return 'fa-linkedin-square';
+            return 'fa-globe';
+        }
+
+        // Verificar si es sitio externo
+        function esExterno(url) {
+            return sitiosExternos.some(dominio => url.includes(dominio));
+        }
+
+        // Abrir enlace
+        function abrirEnlace(url) {
+            if (esExterno(url)) {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            } else {
+                vistaWeb.src = url;
+                pantallaInicio.style.display = 'none';
+                zonaNavegacion.style.display = 'flex';
+            }
+        }
+
+        // Dibujar todos los marcadores
+        function dibujarMarcadores() {
+            contenedorMarc.innerHTML = '';
+// Dibujar todos los marcadores
+function dibujarMarcadores() {
+    contenedorMarc.innerHTML = '';
+
+    marcadores.forEach((m, indice) => {
+        const tarjeta = document.createElement('div');
+        tarjeta.className = 'marcador';
+        tarjeta.innerHTML = `
+            <button class="btn-quitar" data-indice="${indice}" onclick="event.stopPropagation(); eliminarMarcador(${indice})">×</button>
+            <i class="fa ${getIcono(m.nombre)}"></i>
+            <span>${m.nombre}</span>
+        `;
+        tarjeta.onclick = () => abrirEnlace(m.url);
+        contenedorMarc.appendChild(tarjeta);
+    });
+
+    // Botón "+ Agregar página"
+    const btnAgregar = document.createElement('div');
+    btnAgregar.className = 'marcador btn-agregar';
+    btnAgregar.innerHTML = `
+        <i class="fa fa-plus"></i>
+        <span>Agregar página</span>
+    `;
+    btnAgregar.onclick = abrirModalAgregar;
+    contenedorMarc.appendChild(btnAgregar);
+}
+
+// Eliminar marcador
+function eliminarMarcador(indice) {
+    if (confirm('¿Eliminar este acceso directo?')) {
+        marcadores.splice(indice, 1);
+        guardarEnStorage();
+        dibujarMarcadores();
+    }
+}
+
+// Abrir modal
+function abrirModalAgregar() {
+    modalAgregar.classList.add('mostrar');
+    nombreSitio.value = '';
+    urlSitio.value = '';
+}
+
+// Cerrar modal
+function cerrarModal() {
+    modalAgregar.classList.remove('mostrar');
+}
+
+// Guardar nuevo marcador
+function guardarNuevoMarcador() {
+    const nombre = nombreSitio.value.trim();
+    let url = urlSitio.value.trim();
+
+    if (!nombre || !url) {
+        alert('Completa ambos campos');
+        return;
+    }
+
+    // Asegurar que tenga http
+    if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+    }
+
+    marcadores.push({ nombre, url });
+    guardarEnStorage();
+    dibujarMarcadores();
+    cerrarModal();
+}
+
+// Alternar menú de tres puntos
+function toggleMenu() {
+    menuDesp.classList.toggle('mostrar');
+}
+
+// Cerrar menú al hacer clic fuera
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.menu-puntos')) {
+        menuDesp.classList.remove('mostrar');
+    }
+});
+
+// Búsqueda con Enter
+entradaBuscar.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        let consulta = entradaBuscar.value.trim();
+        if (!consulta) return;
+        
+        if (consulta.includes('.')) {
+            if (!/^https?:\/\//i.test(consulta)) consulta = 'https://' + consulta;
+            abrirEnlace(consulta);
+        } else {
+            abrirEnlace('https://www.google.com/search?q=' + encodeURIComponent(consulta));
+        }
+        entradaBuscar.value = '';
+    }
+});
+
+// Botón estrella = abrir modal agregar
+btnEstrella.addEventListener('click', abrirModalAgregar);
+
+// Inicializar al cargar
+document.addEventListener('DOMContentLoaded', cargarMarcadores);
+</script>
+</body>
+</html>
+
